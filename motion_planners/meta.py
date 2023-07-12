@@ -43,9 +43,9 @@ def check_direct(start, goal, extend_fn, collision_fn):
 
 #################################################################
 
-def random_restarts(solve_fn, start, goal, distance_fn, sample_fn, extend_fn, collision_fn,
+def random_restarts(solve_fn, start, goal, distance_fn, sample_fn, extend_fn, collision_fn, path_cost_fn=None,
                     restarts=RRT_RESTARTS, smooth=RRT_SMOOTHING,
-                    success_cost=0., max_time=INF, max_solutions=1, verbose=False, **kwargs):
+                    success_cost=0., max_time=INF, max_solutions=1, max_cost=INF, verbose=False, **kwargs):
     """
     :param start: Start configuration - conf
     :param goal: End configuration - conf
@@ -62,25 +62,31 @@ def random_restarts(solve_fn, start, goal, distance_fn, sample_fn, extend_fn, co
     path = check_direct(start, goal, extend_fn, collision_fn)
     if path is False:
         return None
-    if path is not None:
+    if path is not None and path_cost_fn(path) < max_cost:
         solutions.append(path)
 
-    for attempt in irange(restarts + 1):
+    while True:
         if (len(solutions) >= max_solutions) or (elapsed_time(start_time) >= max_time):
             break
         attempt_time = (max_time - elapsed_time(start_time))
         path = solve_fn(start, goal, distance_fn, sample_fn, extend_fn, collision_fn,
-                        max_time=attempt_time, verbose=verbose, **kwargs)
+                        max_time=attempt_time, verbose=False, **kwargs)
         if path is None:
             continue
         path = smooth_path(path, extend_fn, collision_fn, max_iterations=smooth,
-                           max_time=max_time-elapsed_time(start_time), verbose=verbose)
+                           max_time=max_time-elapsed_time(start_time), verbose=False)
+        path_cost = path_cost_fn(path)
+        print('Path cost:', path_cost)
+        if path_cost > max_cost:
+            continue
         solutions.append(path)
-        if compute_path_cost(path, distance_fn) < success_cost:
-            break
-    solutions = sorted(solutions, key=lambda path: compute_path_cost(path, distance_fn))
-    print('Solutions ({}): {} | Time: {:.3f}'.format(len(solutions), [(len(path), round(compute_path_cost(
-        path, distance_fn), 3)) for path in solutions], elapsed_time(start_time)))
+        # if compute_path_cost(path, distance_fn) < success_cost:
+        #     break
+        print(len(solutions), 'solutions', elapsed_time(start_time))
+    solutions = sorted(solutions, key=lambda path: path_cost_fn(path))
+    print('Solutions ({}): {} | Time: {:.3f}'.format(len(solutions),
+                                                     [(len(path), round(path_cost_fn(path), 3)) for path in solutions],
+                                                     elapsed_time(start_time)))
     return solutions
 
 def solve_and_smooth(solve_fn, q1, q2, distance_fn, sample_fn, extend_fn, collision_fn, **kwargs):
