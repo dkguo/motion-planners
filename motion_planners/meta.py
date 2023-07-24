@@ -38,6 +38,7 @@ def direct_path(start, goal, extend_fn, collision_fn):
 
 def check_direct(start, goal, extend_fn, collision_fn):
     if any(collision_fn(q) for q in [start, goal]):
+        print('start or goal in collision')
         return False
     return direct_path(start, goal, extend_fn, collision_fn)
 
@@ -62,6 +63,7 @@ def random_restarts(solve_fn, start, goal, distance_fn, sample_fn, extend_fn, co
     path_costs = []
     path = check_direct(start, goal, extend_fn, collision_fn)
     if path is False:
+        print('No direct path connecting start and goal')
         return None
     if path is not None and path_cost_fn(path) < max_cost:
         paths.append(path)
