@@ -76,8 +76,8 @@ def random_restarts(solve_fn, start, goal, distance_fn, sample_fn, extend_fn, co
                         max_time=attempt_time, verbose=False, **kwargs)
         if path is None:
             continue
-        path = smooth_path(path, extend_fn, collision_fn, max_iterations=smooth,
-                           max_time=max_time-elapsed_time(start_time), verbose=False)
+        # path = smooth_path(path, extend_fn, collision_fn, max_iterations=smooth,
+        #                    max_time=max_time-elapsed_time(start_time), verbose=False)
         path_cost = path_cost_fn(path)
         # print('Path cost:', path_cost)
         if path_cost > max_cost:
