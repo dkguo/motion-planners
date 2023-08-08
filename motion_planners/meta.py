@@ -37,8 +37,11 @@ def direct_path(start, goal, extend_fn, collision_fn):
     # return path
 
 def check_direct(start, goal, extend_fn, collision_fn):
-    if any(collision_fn(q) for q in [start, goal]):
-        print('start or goal in collision')
+    if collision_fn(start, diagnosis=True):
+        print('start in collision')
+        return False
+    if collision_fn(goal, diagnosis=True):
+        print('goal in collision')
         return False
     return direct_path(start, goal, extend_fn, collision_fn)
 
